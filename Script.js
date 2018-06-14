@@ -9,6 +9,10 @@ let promisesLinhasCartas = [];
 let url;
 let linhasCartas = [];
 let resultadosLojas = [];
+let callback = function(err) {
+  if (err) throw err;
+  console.log('The "data to append" was appended to file!');
+};
 
 
 
@@ -44,6 +48,7 @@ class ResultadoLoja {
 }
 
 function execute(){
+  fs.appendFileSync(process.cwd() + '\\resultado.txt', "Total de cartas: " + cardsNames.length + '\r\n \r\n', callback);
   for (var i = 0; i < cardsNames.length; i++) {
     promisesLinhasCartas[i] = linhasCarta(cardsNames[i]).then(function(estoquesLinhas) {
       linhasCartas.push(estoquesLinhas);
@@ -52,7 +57,6 @@ function execute(){
 
   Promise.all(promisesLinhasCartas).then(function() {
     //console.log(linhasCartas[0][0].nome);
-
     for (var i = 0; i < linhasCartas.length; i++) {
       for (var i2 = 0; i2 < linhasCartas[i].length; i2++) {
 
@@ -86,10 +90,6 @@ function execute(){
       process.stdout.write("Quantidade de Cartas: " + resultadosLojas[i].qtdCartas + ' | ');
       process.stdout.write("Preço Total: " + resultadosLojas[i].precoTotal.toFixed(2) + '\n \n');
 
-      let callback = function(err) {
-        if (err) throw err;
-  console.log('The "data to append" was appended to file!');
-};
       fs.appendFileSync(process.cwd() + '\\resultado.txt', "Nome da Loja: " + resultadosLojas[i].nome + ' | ', callback);
       fs.appendFileSync(process.cwd() + '\\resultado.txt', "Quantidade de Cartas: " + resultadosLojas[i].qtdCartas + ' | ', callback);
       fs.appendFileSync(process.cwd() + '\\resultado.txt', "Preço Total: " + resultadosLojas[i].precoTotal.toFixed(2) + '\r\n \r\n', callback);
@@ -112,20 +112,24 @@ function linhasCarta(cardName) {
     let $ = cheerio.load(body);
     let estoquesLinhasCheerio = [];
 
-    estoquesLinhasCheerio = $('.estoque-linha').each(function() {
-      let nomeLoja = $(this).find('.e-col1 img').attr('title');
-      let precoCartaPromo = $(this).find('.e-col3').text();
-      let precoCarta = removePromo(precoCartaPromo);
-      precoCarta = precoCarta.replace(',','.');
-      precoCarta = Number(precoCarta.slice(2));
+    if($('.estoque-linha').length !== 0) {
+
+      $('.estoque-linha').each(function() {
+        let nomeLoja = $(this).find('.e-col1 img').attr('title');
+        let precoCartaPromo = $(this).find('.e-col3').text();
+        let precoCarta = removePromo(precoCartaPromo);
+        precoCarta = precoCarta.replace(',','.');
+        precoCarta = Number(precoCarta.slice(2));
 
 
-      if(!contem(estoquesLinhas, nomeLoja) && nomeLoja) {
-        estoquesLinhas.push(new EstoqueLinha(nomeLoja, precoCarta));
-      }
-    });
-    //console.log(estoquesLinhas);
-    //console.log('\n');
+        if(!contem(estoquesLinhas, nomeLoja) && nomeLoja) {
+          estoquesLinhas.push(new EstoqueLinha(nomeLoja, precoCarta));
+        }
+      });
+    } else {
+      fs.appendFileSync(process.cwd() + '\\resultado.txt', `Carta ${cardName} não encontrada \r\n \r\n`, callback);
+      console.log(`Carta ${cardName} não encontrada`);
+    }
 
     return estoquesLinhas;
   });// assincrono end
