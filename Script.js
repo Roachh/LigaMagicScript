@@ -1,13 +1,32 @@
-let cheerio = require("cheerio");
-let request = require("request-promise");
-let striptags = require('striptags');
+const cheerio = require("cheerio");
+const request = require("request-promise");
+const striptags = require('striptags');
+const readline = require('readline');
+const fs = require('fs');
 
-
-let cardsNames = ["Aether Hub", "Akoum Refuge", "Bloodfell Caves", 'Duress'];
+let cardsNames = [];
 let promisesLinhasCartas = [];
 let url;
 let linhasCartas = [];
 let resultadosLojas = [];
+
+
+
+
+var lineReader = readline.createInterface({
+  input: fs.createReadStream(process.cwd() + '\\cartas.txt')
+});
+
+lineReader.on('line', function (line) {
+  cardsNames.push(line);
+});
+
+lineReader.on('close', function() {
+  execute();
+})
+
+
+
 
 class EstoqueLinha {
   constructor(nome, preco) {
@@ -24,44 +43,61 @@ class ResultadoLoja {
   }
 }
 
+function execute(){
+  for (var i = 0; i < cardsNames.length; i++) {
+    promisesLinhasCartas[i] = linhasCarta(cardsNames[i]).then(function(estoquesLinhas) {
+      linhasCartas.push(estoquesLinhas);
+    });
+  }
 
-for (var i = 0; i < cardsNames.length; i++) {
-  promisesLinhasCartas[i] = linhasCarta(cardsNames[i]).then(function(estoquesLinhas) {
-    linhasCartas.push(estoquesLinhas);
-  });
-}
+  Promise.all(promisesLinhasCartas).then(function() {
+    //console.log(linhasCartas[0][0].nome);
 
-Promise.all(promisesLinhasCartas).then(function() {
-  //console.log(linhasCartas[0][0].nome);
+    for (var i = 0; i < linhasCartas.length; i++) {
+      for (var i2 = 0; i2 < linhasCartas[i].length; i2++) {
 
-  for (var i = 0; i < linhasCartas.length; i++) {
-    for (var i2 = 0; i2 < linhasCartas[i].length; i2++) {
-
-      let flag = 0;
-      let index;
-      for (var i3 = 0; i3 < resultadosLojas.length; i3++) {
-        //já adicionou essa loja nos resultados
-        if(resultadosLojas[i3].nome == linhasCartas[i][i2].nome) {
-          flag = 1;
-          index = i3;
+        let flag = 0;
+        let index;
+        for (var i3 = 0; i3 < resultadosLojas.length; i3++) {
+          //já adicionou essa loja nos resultados
+          if(resultadosLojas[i3].nome == linhasCartas[i][i2].nome) {
+            flag = 1;
+            index = i3;
+          }
+        }
+        //se não adicionou, adiciona com o nome e preço. Se adicionou, soma o preço no resultadosLojas[index]
+        if(flag == 0) {
+          let resultadoLoja = new ResultadoLoja(linhasCartas[i][i2].nome, linhasCartas[i][i2].preco);
+          resultadoLoja.qtdCartas += 1;
+          resultadosLojas.push(resultadoLoja);
+          //console.log('Criou!');
+        } else {
+          resultadosLojas[index].precoTotal += linhasCartas[i][i2].preco;
+          resultadosLojas[index].qtdCartas += 1;
+          //console.log('Somou!');
         }
       }
-      //se não adicionou, adiciona com o nome e preço. Se adicionou, soma o preço no resultadosLojas[index]
-      if(flag == 0) {
-        let resultadoLoja = new ResultadoLoja(linhasCartas[i][i2].nome, linhasCartas[i][i2].preco);
-        resultadoLoja.qtdCartas += 1;
-        resultadosLojas.push(resultadoLoja);
-        console.log('Criou!');
-      } else {
-        resultadosLojas[index].precoTotal += linhasCartas[i][i2].preco;
-        resultadosLojas[index].qtdCartas += 1;
-        console.log('Somou!');
-      }
     }
-  }
-  console.log(resultadosLojas);
-});
+    resultadosLojas.sort(function(a, b){
+      return b.qtdCartas - a.qtdCartas;
+    });
+    for (var i = 0; i < resultadosLojas.length; i++) {
+      process.stdout.write("Nome da Loja: " + resultadosLojas[i].nome + ' | ');
+      process.stdout.write("Quantidade de Cartas: " + resultadosLojas[i].qtdCartas + ' | ');
+      process.stdout.write("Preço Total: " + resultadosLojas[i].precoTotal.toFixed(2) + '\n \n');
 
+      let callback = function(err) {
+        if (err) throw err;
+  console.log('The "data to append" was appended to file!');
+};
+      fs.appendFileSync(process.cwd() + '\\resultado.txt', "Nome da Loja: " + resultadosLojas[i].nome + ' | ', callback);
+      fs.appendFileSync(process.cwd() + '\\resultado.txt', "Quantidade de Cartas: " + resultadosLojas[i].qtdCartas + ' | ', callback);
+      fs.appendFileSync(process.cwd() + '\\resultado.txt', "Preço Total: " + resultadosLojas[i].precoTotal.toFixed(2) + '\r\n \r\n', callback);
+
+    }
+
+  });
+}
 
 
 
