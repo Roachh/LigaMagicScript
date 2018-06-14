@@ -1,7 +1,8 @@
 FAZER:
 
-1 - Sobrescrever o arquivo texto existente
-2 - Aceitar mais de uma carta
+1 - Aceitar mais de uma carta
+2 - Fazer console.log durante a execução
 3 - Integrar a um formulario web
-4 - Escolher nao aceitar Cartas com determinado estado (HP, SD, Damaged...)
-5 - Avisar quais cartas estao com preço acima da media
+4 - Escolher não aceitar Cartas com determinado estado (HP, SD, Damaged...)
+5 - Avisar quais cartas estão com preço acima da média
+6 - Integrar Frete das lojas
