@@ -1,9 +1,10 @@
 let cheerio = require("cheerio");
-let request = require("request");
+let request = require("request-promise");
 let striptags = require('striptags');
 
 
-let cardName;
+let cardsNames = ["Aether Hub", "Akoum Refuge"];
+let promisesLinhasCartas = [];
 let url;
 let linhasCartas = [];
 let resultadosLojas = [];
@@ -22,38 +23,23 @@ class ResultadoLoja {
   }
 }
 
-cardName = "Akoum Refuge";
-console.log(cardName);
-linhasCartas.push(linhasCarta(cardName));
 
-
-cardName = "Battlefield Forge";
-console.log(cardName);
-linhasCartas.push(linhasCarta(cardName));
-//console.log(linhasCartas);
-
-
-
-for (var i = 0; i < linhasCartas.length; i++) {
-  let flag = 0;
-  let index = 0;
-  for (var i2 = 0; i2 < resultadosLojas.length; i2++) {
-    //já adicionou essa loja nos resultados
-    if(resultadosLojas[i2].nome == linhasCartas[i].nome) {
-      flag = 1;
-      index = i2;
-    }
-  }
-  //se não adicionou, adiciona com o nome e preço. Se adicionou, soma o preço no resultadosLojas[index]
-  // if(flag == 0) {
-  //   let resultadoLoja = new ResultadoLoja(linhasCartas[i].nome, linhasCartas[i].preco)
-  //   resultadosLojas.push(resultadoLoja);
-  //   console.log('Criou!');
-  // } else {
-  //   resultadosLojas[index].preco += linhasCartas[i].preco;
-  //   console.log('Somou!');
-  // }
+for (var i = 0; i < cardsNames.length; i++) {
+  promisesLinhasCartas[i] = linhasCarta(cardsNames[i]).then(function(estoquesLinhas) {
+    linhasCartas.push(estoquesLinhas);
+  });
 }
+
+Promise.all(promisesLinhasCartas).then(function() {
+  console.log(linhasCartas);
+
+});
+
+
+
+
+
+
 
 
 
@@ -66,10 +52,8 @@ function linhasCarta(cardName) {
   let estoquesLinhas = [];
 
   //assincrono start
-  request(url, function(err, resp, body) {
-    if(err) {
-      console.log(err);
-    } else {
+  return request(url).then(function(body) {
+
       let $ = cheerio.load(body);
       let estoquesLinhasCheerio = [];
 
@@ -81,20 +65,15 @@ function linhasCarta(cardName) {
 
         if(!contem(estoquesLinhas, nomeLoja) && nomeLoja) {
           estoquesLinhas.push(new EstoqueLinha(nomeLoja, precoCarta));
-          //console.log(estoquesLinhas[count]);
         }
-      }
-    );
-
-    console.log(estoquesLinhas);
+      });
+    //console.log(estoquesLinhas);
     //console.log('\n');
 
-
-  }
+  return estoquesLinhas;
 });// assincrono end
 
 //console.log(estoquesLinhas);
-return estoquesLinhas;
 }
 
 
