@@ -48,6 +48,7 @@ class ResultadoLoja {
 }
 
 function execute(){
+  fs.writeFileSync(process.cwd() + '\\resultado.txt', '');
   fs.appendFileSync(process.cwd() + '\\resultado.txt', "Total de cartas: " + cardsNames.length + '\r\n \r\n', callback);
   for (var i = 0; i < cardsNames.length; i++) {
     promisesLinhasCartas[i] = linhasCarta(cardsNames[i]).then(function(estoquesLinhas) {

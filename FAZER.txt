@@ -1,0 +1,7 @@
+FAZER:
+
+1 - Sobrescrever o arquivo texto existente
+2 - Aceitar mais de uma carta
+3 - Integrar a um formulario web
+4 - Escolher nao aceitar Cartas com determinado estado (HP, SD, Damaged...)
+5 - Avisar quais cartas estao com preço acima da media
