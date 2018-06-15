@@ -100,8 +100,8 @@ function execute(){
 
 
 function linhasCarta(cardName) {
-  cardName = encodeURIComponent(cardName.trim());
-  url = "https://www.ligamagic.com.br/?view=cards%2Fsearch&card=" + cardName;
+  let encodedCardName = encodeURIComponent(cardName.trim());
+  url = "https://www.ligamagic.com.br/?view=cards%2Fsearch&card=" + encodedCardName;
   let estoquesLinhas = [];
 
   
