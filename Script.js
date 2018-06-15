@@ -1,6 +1,5 @@
 const cheerio = require("cheerio");
 const request = require("request-promise");
-const striptags = require('striptags');
 const readline = require('readline');
 const fs = require('fs');
 
@@ -9,11 +8,7 @@ let promisesLinhasCartas = [];
 let url;
 let linhasCartas = [];
 let resultadosLojas = [];
-let callback = function(err) {
-  if (err) throw err;
-  console.log('The "data to append" was appended to file!');
-};
-
+let count = 0;
 
 
 
@@ -28,8 +23,6 @@ lineReader.on('line', function (line) {
 lineReader.on('close', function() {
   execute();
 })
-
-
 
 
 class EstoqueLinha {
@@ -49,12 +42,14 @@ class ResultadoLoja {
 
 function execute(){
   fs.writeFileSync(process.cwd() + '\\resultado.txt', '');
-  fs.appendFileSync(process.cwd() + '\\resultado.txt', "Total de cartas: " + cardsNames.length + '\r\n \r\n', callback);
+  fs.appendFileSync(process.cwd() + '\\resultado.txt', "Total de cartas: " + cardsNames.length + '\r\n \r\n');
   for (var i = 0; i < cardsNames.length; i++) {
     promisesLinhasCartas[i] = linhasCarta(cardsNames[i]).then(function(estoquesLinhas) {
       linhasCartas.push(estoquesLinhas);
     });
   }
+
+  
 
   Promise.all(promisesLinhasCartas).then(function() {
     //console.log(linhasCartas[0][0].nome);
@@ -91,9 +86,9 @@ function execute(){
       process.stdout.write("Quantidade de Cartas: " + resultadosLojas[i].qtdCartas + ' | ');
       process.stdout.write("Preço Total: " + resultadosLojas[i].precoTotal.toFixed(2) + '\n \n');
 
-      fs.appendFileSync(process.cwd() + '\\resultado.txt', "Nome da Loja: " + resultadosLojas[i].nome + ' | ', callback);
-      fs.appendFileSync(process.cwd() + '\\resultado.txt', "Quantidade de Cartas: " + resultadosLojas[i].qtdCartas + ' | ', callback);
-      fs.appendFileSync(process.cwd() + '\\resultado.txt', "Preço Total: " + resultadosLojas[i].precoTotal.toFixed(2) + '\r\n \r\n', callback);
+      fs.appendFileSync(process.cwd() + '\\resultado.txt', "Nome da Loja: " + resultadosLojas[i].nome + ' | ');
+      fs.appendFileSync(process.cwd() + '\\resultado.txt', "Quantidade de Cartas: " + resultadosLojas[i].qtdCartas + ' | ');
+      fs.appendFileSync(process.cwd() + '\\resultado.txt', "Preço Total: " + resultadosLojas[i].precoTotal.toFixed(2) + '\r\n \r\n');
 
     }
 
@@ -106,6 +101,8 @@ function linhasCarta(cardName) {
   cardName = encodeURIComponent(cardName.trim());
   url = "https://www.ligamagic.com.br/?view=cards%2Fsearch&card=" + cardName;
   let estoquesLinhas = [];
+
+  
 
   //assincrono start
   return request(url).then(function(body) {
@@ -128,7 +125,7 @@ function linhasCarta(cardName) {
         }
       });
     } else {
-      fs.appendFileSync(process.cwd() + '\\resultado.txt', `Carta ${cardName} não encontrada \r\n \r\n`, callback);
+      fs.appendFileSync(process.cwd() + '\\resultado.txt', `Carta ${cardName} não encontrada \r\n \r\n`);
       console.log(`Carta ${cardName} não encontrada`);
     }
 
