@@ -107,7 +107,7 @@ function linhasCarta(cardName) {
   
 
   //assincrono start
-  return request(url).then(function(body) {
+  return request( { uri: url, timeout: 30000 } ).then(function(body) {
 
     let $ = cheerio.load(body);
     let estoquesLinhasCheerio = [];
@@ -116,8 +116,8 @@ function linhasCarta(cardName) {
 
       $('.estoque-linha').each(function() {
         let nomeLoja = $(this).find('.e-col1 img').attr('title');
-        let precoCartaPromo = $(this).find('.e-col3').text();
-        let precoCarta = removePromo(precoCartaPromo);
+        let precoCartaWithPromo = $(this).find('.e-col3').text();
+        let precoCarta = getPromo(precoCartaWithPromo);
         precoCarta = precoCarta.replace(',','.');
         precoCarta = Number(precoCarta.slice(2));
 
@@ -139,18 +139,18 @@ function linhasCarta(cardName) {
 
 
 
-function removePromo(precoCartaPromo) {
+function getPromo(precoCartaWithPromo) {
   let flag = 0;
   let subsStart = 0;
-  for (var i = 0; i < precoCartaPromo.length; i++) {
-    if(precoCartaPromo[i] == 'R') {
+  for (var i = 0; i < precoCartaWithPromo.length; i++) {
+    if(precoCartaWithPromo[i] == 'R') {
       if(flag == 1) {
         subsStart = i;
       }
       flag += 1;
     }
   }
-  return precoCartaPromo = precoCartaPromo.substring(subsStart, precoCartaPromo.length);
+  return precoCartaWithPromo = precoCartaWithPromo.substring(subsStart, precoCartaWithPromo.length);
 }
 
 function  contem(estoquesLinhas, nomeLoja) {

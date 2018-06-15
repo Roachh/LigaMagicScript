@@ -1,8 +1,7 @@
 FAZER:
 
 1 - Aceitar mais de uma carta
-2 - Fazer console.log durante a execução
-3 - Integrar a um formulario web
-4 - Escolher não aceitar Cartas com determinado estado (HP, SD, Damaged...)
-5 - Avisar quais cartas estão com preço acima da média
-6 - Integrar Frete das lojas
+2 - Integrar a um formulario web
+3 - Escolher não aceitar Cartas com determinado estado (HP, SD, Damaged...)
+4 - Avisar quais cartas estão com preço acima da média
+5 - Integrar Frete das lojas
