@@ -8,19 +8,12 @@ let promisesLinhasCartas = [];
 let url;
 let resultadosLojas = [];
 
-
-let lineReader = readline.createInterface({
-  input: fs.createReadStream(process.cwd() + '\\cartas.txt')
-});
-
-lineReader.on('line', function (line) {
-  cardsNames.push(line);
-});
-
-lineReader.on('close', function () {
-  execute();
-});
-
+class InputCard {
+  constructor(nome, quantidade) {
+    this.nome = nome;
+    this.quantidade = quantidade;
+  }
+}
 
 class EstoqueLinha {
   constructor(nome, preco) {
@@ -37,15 +30,33 @@ class ResultadoLoja {
   }
 }
 
+let lineReader = readline.createInterface({
+  input: fs.createReadStream(process.cwd() + '\\cartas.txt')
+});
+
+
+lineReader.on('line', function (line) {
+  //console.log(line);
+  let inputCard = corrigeInput(line);  
+  console.log(inputCard);
+  cardsNames.push(line);
+});
+
+lineReader.on('close', function () {
+  execute();
+});
+
+
+
 function execute() {
   let linhasCartas = [];
   let loadingCount = 0;
 
   fs.writeFileSync(process.cwd() + '\\resultado.txt', '');
   fs.appendFileSync(process.cwd() + '\\resultado.txt', "Total de cartas: " + cardsNames.length + '\r\n \r\n');
-  
+
   for (let i = 0; i < cardsNames.length; i++) {
-    
+
     promisesLinhasCartas[i] = linhasCarta(cardsNames[i]).then(function (estoquesLinhas) {
       linhasCartas.push(estoquesLinhas);
       loadingCount++;
@@ -112,7 +123,6 @@ function linhasCarta(cardName) {
   return request({ uri: url, timeout: 30000 }).then(function (body) {
 
     let $ = cheerio.load(body);
-    let estoquesLinhasCheerio = [];
 
     if ($('.estoque-linha').length !== 0) {
 
@@ -172,4 +182,19 @@ function printProgress(loadingCount, totalCartas) {
   if (loadingCount == totalCartas) {
     process.stdout.write('\n');
   }
+}
+
+function corrigeInput(line) {
+  let quantidade;
+  let nome;
+  let firstPart = line.substr(0, line.indexOf(' '), 10);
+  if (isNaN(parseInt(firstPart))) {
+    quantidade = 1;
+    nome = line;
+  } else {
+    quantidade = line.substr(0, line.indexOf(' '));
+    nome = line.substr(line.indexOf(' ') + 1);
+  }
+
+  return new InputCard(nome, quantidade); 
 }
