@@ -8,7 +8,7 @@ let promisesLinhasCartas = [];
 let url;
 let linhasCartas = [];
 let resultadosLojas = [];
-let count = 0;
+let loadingCount = 0;
 
 
 
@@ -46,6 +46,8 @@ function execute(){
   for (var i = 0; i < cardsNames.length; i++) {
     promisesLinhasCartas[i] = linhasCarta(cardsNames[i]).then(function(estoquesLinhas) {
       linhasCartas.push(estoquesLinhas);
+      loadingCount++;
+      printProgress(loadingCount, cardsNames.length);
     });
   }
 
@@ -126,7 +128,7 @@ function linhasCarta(cardName) {
       });
     } else {
       fs.appendFileSync(process.cwd() + '\\resultado.txt', `Carta ${cardName} não encontrada \r\n \r\n`);
-      console.log(`Carta ${cardName} não encontrada`);
+      //console.log(`Carta ${cardName} não encontrada`);
     }
 
     return estoquesLinhas;
@@ -159,4 +161,13 @@ function  contem(estoquesLinhas, nomeLoja) {
     }
   }
   return found;
+}
+
+function printProgress(loadingCount, totalCartas){
+  process.stdout.clearLine();
+  process.stdout.cursorTo(0);
+  process.stdout.write('Carregando: ' + loadingCount + '/' + totalCartas);
+  if(loadingCount == totalCartas) {
+    process.stdout.write('\n');
+  }
 }
