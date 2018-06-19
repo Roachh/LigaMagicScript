@@ -30,25 +30,29 @@ class ResultadoLoja {
   }
 }
 
-let lineReader = readline.createInterface({
-  input: fs.createReadStream(process.cwd() + '\\cartas.txt')
-});
+
+recebeCartas();
+
+function recebeCartas() {
+  let lineReader = readline.createInterface({
+    input: fs.createReadStream(process.cwd() + '\\cartas.txt')
+  });
+
+  lineReader.on('line', function (line) {
+    let inputCard = corrigeInput(line);
+    console.log(inputCard);
+    cardsNames.push(line);
+  });
+
+  lineReader.on('close', function () {
+    processaCartas();
+  });
+}
 
 
-lineReader.on('line', function (line) {
-  //console.log(line);
-  let inputCard = corrigeInput(line);  
-  console.log(inputCard);
-  cardsNames.push(line);
-});
-
-lineReader.on('close', function () {
-  execute();
-});
 
 
-
-function execute() {
+function processaCartas() {
   let linhasCartas = [];
   let loadingCount = 0;
 
@@ -57,7 +61,7 @@ function execute() {
 
   for (let i = 0; i < cardsNames.length; i++) {
 
-    promisesLinhasCartas[i] = linhasCarta(cardsNames[i]).then(function (estoquesLinhas) {
+    promisesLinhasCartas[i] = getPromiseEstoqueLinhas(cardsNames[i]).then(function (estoquesLinhas) {
       linhasCartas.push(estoquesLinhas);
       loadingCount++;
       printProgress(loadingCount, cardsNames.length);
@@ -71,28 +75,27 @@ function execute() {
     for (let i = 0; i < linhasCartas.length; i++) {
       for (let i2 = 0; i2 < linhasCartas[i].length; i2++) {
 
-        let flag = 0;
+        let adicionou = false;
         let index;
         for (let i3 = 0; i3 < resultadosLojas.length; i3++) {
           //já adicionou essa loja nos resultados
           if (resultadosLojas[i3].nome == linhasCartas[i][i2].nome) {
-            flag = 1;
+            adicionou = true;
             index = i3;
           }
         }
         //se não adicionou, adiciona com o nome e preço. Se adicionou, soma o preço no resultadosLojas[index]
-        if (flag == 0) {
+        if (!adicionou) {
           let resultadoLoja = new ResultadoLoja(linhasCartas[i][i2].nome, linhasCartas[i][i2].preco);
           resultadoLoja.qtdCartas += 1;
           resultadosLojas.push(resultadoLoja);
-          //console.log('Criou!');
         } else {
           resultadosLojas[index].precoTotal += linhasCartas[i][i2].preco;
           resultadosLojas[index].qtdCartas += 1;
-          //console.log('Somou!');
         }
       }
     }
+
     resultadosLojas.sort(function (a, b) {
       return b.qtdCartas - a.qtdCartas;
     });
@@ -112,7 +115,7 @@ function execute() {
 
 
 
-function linhasCarta(cardName) {
+function getPromiseEstoqueLinhas(cardName) {
   let encodedCardName = encodeURIComponent(cardName.trim());
   url = "https://www.ligamagic.com.br/?view=cards%2Fsearch&card=" + encodedCardName;
   let estoquesLinhas = [];
@@ -120,7 +123,7 @@ function linhasCarta(cardName) {
 
 
   //assincrono start
-  return request({ uri: url, timeout: 30000 }).then(function (body) {
+  let promiseEstoqueLinhas = request({ uri: url, timeout: 30000, time: true }).then(function (body) {
 
     let $ = cheerio.load(body);
 
@@ -134,7 +137,7 @@ function linhasCarta(cardName) {
         precoCarta = Number(precoCarta.slice(2));
 
 
-        if (!contem(estoquesLinhas, nomeLoja) && nomeLoja) {
+        if (!contemLojaNoResultado(estoquesLinhas, nomeLoja) && nomeLoja) {
           estoquesLinhas.push(new EstoqueLinha(nomeLoja, precoCarta));
         }
       });
@@ -142,9 +145,11 @@ function linhasCarta(cardName) {
       fs.appendFileSync(process.cwd() + '\\resultado.txt', `Carta ${cardName} não encontrada \r\n \r\n`);
       //console.log(`Carta ${cardName} não encontrada`);
     }
-
     return estoquesLinhas;
   });// assincrono end
+
+
+  return promiseEstoqueLinhas;
 
   //console.log(estoquesLinhas);
 }
@@ -165,7 +170,7 @@ function getPromo(precoCartaWithPromo) {
   return precoCartaWithPromo.substring(subsStart, precoCartaWithPromo.length);
 }
 
-function contem(estoquesLinhas, nomeLoja) {
+function contemLojaNoResultado(estoquesLinhas, nomeLoja) {
   let found = false;
   for (let i = 0; i < estoquesLinhas.length; i++) {
     if (estoquesLinhas[i].nome == nomeLoja) {
@@ -196,5 +201,5 @@ function corrigeInput(line) {
     nome = line.substr(line.indexOf(' ') + 1);
   }
 
-  return new InputCard(nome, quantidade); 
+  return new InputCard(nome, quantidade);
 }

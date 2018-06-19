@@ -1,6 +1,6 @@
-Caves of Koilos
-Grand Coliseum
-Isolated Chapel
+1 Caves of Koilos
+2 Grand Coliseum
+3 Isolated Chapel
 Needle Spires
 Shambling Vent
 Ob Nixilis Reignited
