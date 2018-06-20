@@ -7,6 +7,7 @@ let cardsNames = [];
 let promisesLinhasCartas = [];
 let url;
 let resultadosLojas = [];
+let executionTime = 0;
 
 class InputCard {
   constructor(nome, quantidade) {
@@ -19,6 +20,7 @@ class EstoqueLinha {
   constructor(nome, preco) {
     this.nome = nome;
     this.preco = preco;
+    //this.quantidade = quantidade;
   }
 }
 
@@ -29,6 +31,9 @@ class ResultadoLoja {
     this.qtdCartas = 0;
   }
 }
+
+
+
 
 
 recebeCartas();
@@ -50,8 +55,6 @@ function recebeCartas() {
 }
 
 
-
-
 function processaCartas() {
   let linhasCartas = [];
   let loadingCount = 0;
@@ -64,7 +67,7 @@ function processaCartas() {
     promisesLinhasCartas[i] = getPromiseEstoqueLinhas(cardsNames[i]).then(function (estoquesLinhas) {
       linhasCartas.push(estoquesLinhas);
       loadingCount++;
-      printProgress(loadingCount, cardsNames.length);
+      printProgress(loadingCount, cardsNames.length, executionTime);
     });
   }
 
@@ -121,21 +124,23 @@ function getPromiseEstoqueLinhas(cardName) {
   let estoquesLinhas = [];
 
 
-
   //assincrono start
-  let promiseEstoqueLinhas = request({ uri: url, timeout: 30000, time: true }).then(function (body) {
+  let promiseEstoqueLinhas = request({ uri: url, timeout: 30000, resolveWithFullResponse: true, time: true }).then(function (response) {
 
-    let $ = cheerio.load(body);
+    let $ = cheerio.load(response.body);
+
 
     if ($('.estoque-linha').length !== 0) {
 
-      $('.estoque-linha').each(function () {
+      $('#aba-cards .estoque-linha').each(function () {
         let nomeLoja = $(this).find('.e-col1 img').attr('title');
         let precoCartaWithPromo = $(this).find('.e-col3').text();
         let precoCarta = getPromo(precoCartaWithPromo);
+        let qtdCarta = $(this).find('.e-col5').text();
         precoCarta = precoCarta.replace(',', '.');
         precoCarta = Number(precoCarta.slice(2));
 
+        //console.log(qtdCarta);
 
         if (!contemLojaNoResultado(estoquesLinhas, nomeLoja) && nomeLoja) {
           estoquesLinhas.push(new EstoqueLinha(nomeLoja, precoCarta));
@@ -145,6 +150,7 @@ function getPromiseEstoqueLinhas(cardName) {
       fs.appendFileSync(process.cwd() + '\\resultado.txt', `Carta ${cardName} não encontrada \r\n \r\n`);
       //console.log(`Carta ${cardName} não encontrada`);
     }
+    executionTime = response.elapsedTime;
     return estoquesLinhas;
   });// assincrono end
 
@@ -180,10 +186,10 @@ function contemLojaNoResultado(estoquesLinhas, nomeLoja) {
   return found;
 }
 
-function printProgress(loadingCount, totalCartas) {
+function printProgress(loadingCount, totalCartas, executionTime) {
   process.stdout.clearLine();
   process.stdout.cursorTo(0);
-  process.stdout.write('Carregando: ' + loadingCount + '/' + totalCartas);
+  process.stdout.write('Carregando: ' + loadingCount + '/' + totalCartas + "   tempo: " + executionTime + "ms");
   if (loadingCount == totalCartas) {
     process.stdout.write('\n');
   }
