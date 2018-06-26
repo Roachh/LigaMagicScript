@@ -4,9 +4,6 @@ const readline = require('readline');
 const fs = require('fs');
 
 let cardsNames = [];
-let promisesLinhasCartas = [];
-let url;
-let resultadosLojas = [];
 let executionTime = 0;
 
 class InputCard {
@@ -58,6 +55,8 @@ function recebeCartas() {
 function processaCartas() {
   let linhasCartas = [];
   let loadingCount = 0;
+  let resultadosLojas = [];
+  let promisesLinhasCartas = [];
 
   fs.writeFileSync(process.cwd() + '\\resultado.txt', '');
   fs.appendFileSync(process.cwd() + '\\resultado.txt', "Total de cartas: " + cardsNames.length + '\r\n \r\n');
@@ -120,7 +119,7 @@ function processaCartas() {
 
 function getPromiseEstoqueLinhas(cardName) {
   let encodedCardName = encodeURIComponent(cardName.trim());
-  url = "https://www.ligamagic.com.br/?view=cards%2Fsearch&card=" + encodedCardName;
+  let url = "https://www.ligamagic.com.br/?view=cards%2Fsearch&card=" + encodedCardName;
   let estoquesLinhas = [];
 
 
@@ -203,7 +202,7 @@ function corrigeInput(line) {
     quantidade = 1;
     nome = line;
   } else {
-    quantidade = line.substr(0, line.indexOf(' '));
+    quantidade = Number(line.substr(0, line.indexOf(' ')));
     nome = line.substr(line.indexOf(' ') + 1);
   }
 
